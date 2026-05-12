@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Spec — Guardrail Decision Framework</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-light: #e8f0fe;
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --text: #202124;
+    --text-secondary: #5f6368;
+    --border: #dadce0;
+    --risk-red: #d93025;
+    --risk-bg: #fce8e6;
+    --success-green: #1e8e3e;
+    --success-bg: #e6f4ea;
+    --warn-amber: #e37400;
+    --warn-bg: #fef7e0;
+    --p0: #d93025;
+    --p1: #e37400;
+    --p2: #1a73e8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1a2332 0%, #2d4a6f 60%, var(--primary) 100%);
+    color: #fff;
+    padding: 48px 40px 36px;
+  }
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .header .subtitle {
+    font-size: 1rem;
+    opacity: 0.85;
+    font-weight: 400;
+  }
+  .meta-bar {
+    display: flex;
+    gap: 32px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+  .meta-item strong {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.65;
+    margin-bottom: 2px;
+  }
+
+  /* ── Content ── */
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 40px 60px;
+  }
+
+  /* ── Section ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .section-number {
+    display: inline-block;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .section h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  .section h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 20px 0 10px;
+    color: var(--text);
+  }
+  .section p, .section li {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+  .section ul, .section ol {
+    padding-left: 22px;
+  }
+
+  /* ── Placeholder / fill-in text ── */
+  .placeholder {
+    background: var(--primary-light);
+    border-left: 3px solid var(--primary);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+    color: var(--primary);
+    font-size: 0.9rem;
+    margin: 12px 0;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.9rem;
+  }
+  thead th {
+    background: var(--bg);
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border);
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── Priority badges ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-p0 { background: #fce8e6; color: var(--p0); }
+  .badge-p1 { background: var(--warn-bg); color: var(--p1); }
+  .badge-p2 { background: var(--primary-light); color: var(--p2); }
+
+  /* ── Metric cards ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 14px 0;
+  }
+  .metric-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .metric-card .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .metric-card .value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .metric-card .target {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ── Scenario cards ── */
+  .scenario-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin: 14px 0;
+  }
+  .scenario-card .persona {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .scenario-card .narrative {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+
+  /* ── Risk / Open Q cards ── */
+  .risk-card {
+    border-left: 4px solid var(--risk-red);
+    background: var(--risk-bg);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 10px 0;
+  }
+  .risk-card .risk-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--risk-red);
+    margin-bottom: 4px;
+  }
+  .risk-card p { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
+
+  .question-card {
+    border-left: 4px solid var(--warn-amber);
+    background: var(--warn-bg);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 10px 0;
+  }
+  .question-card .q-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--warn-amber);
+    margin-bottom: 4px;
+  }
+  .question-card p { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
+
+  /* ── UX Flow box ── */
+  .ux-flow {
+    background: var(--bg);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: 14px 0;
+  }
+
+  /* ── Nongoal chip ── */
+  .nongoal {
+    background: #f1f3f4;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 6px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nongoal::before {
+    content: '✕';
+    color: var(--risk-red);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; }
+    .content { padding: 0 20px; }
+    .section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- HEADER — Edit the feature name, owner, and metadata below  -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="header">
+  <h1>Guardrail Decision Framework</h1>
+  <div class="subtitle">Product Specification</div>
+  <div class="meta-bar">
+    <div class="meta-item"><strong>PM Owner</strong> Dylan Daly</div>
+    <div class="meta-item"><strong>Team</strong> ExP · Experimentation Platform</div>
+    <div class="meta-item"><strong>Last Updated</strong> May 11, 2026</div>
+    <div class="meta-item"><strong>Status</strong> Draft</div>
+    <div class="meta-item"><strong>Stakeholders</strong> ExP Eng, ExP Data Science, Feature PMs, Legal/Compliance</div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SECTION 1 — Problem & Opportunity           -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-number">Section 1</div>
+  <h2>Problem &amp; Opportunity</h2>
+
+  <h3>Problem Statement</h3>
+  <p>Feature teams running experiments on ExP get rich scorecards but no consistent answer to the question that actually blocks ship: <em>"Will this regress a guardrail metric?"</em> Today, each team reads p-values and confidence intervals against their own ad-hoc rules of thumb. A non-significant +0.4% crash-rate movement is shipped by one team and blocked by another. Underpowered guardrails are treated as "passing" when in reality they're <strong>uninformative</strong>. The result is preventable user-facing regressions, inconsistent ship bars across the org, and data-scientist toil reviewing every borderline scorecard.</p>
+
+  <h3>Opportunity</h3>
+  <p>ExP processes ~3,200 scorecards per week. Internal audit of 240 randomly sampled "shipped" experiments from Q1 2026 found that <strong>11% had at least one guardrail with a confidence interval that did not rule out the team's stated practical-significance threshold</strong> — i.e., they shipped on signals that were statistically silent on harm. A deterministic, auditable Guardrail Decision Framework — built from the rule-based logic in <em>Scorecard Decision Framework by ExP</em> (Agrawal, 2026) — turns guardrails from a "vibes check" into a contract: each guardrail metric returns 🟢/🟡/🔴 with a one-line reason, and the scorecard rolls up to a single guardrail verdict. Expected impact: ↓ harmful ships, ↓ DS review queue (target: 30% fewer escalations on guardrail-only questions), ↑ consistency across teams.</p>
+
+  <h3>Evidence</h3>
+  <ul>
+    <li><strong>Audit:</strong> Q1 2026 ship-decision audit — 11% of 240 sampled shipped experiments had at least one guardrail CI that didn't rule out the team's own harm threshold</li>
+    <li><strong>DS Workload:</strong> 38% of inbound DS scorecard reviews in Q1 were specifically "is this guardrail OK to ship?" — a deterministic ruling absorbs most of these</li>
+    <li><strong>Prior Art:</strong> Kohavi et al., <em>Trustworthy Online Controlled Experiments</em> (Ch. 8, Guardrail Metrics); Colin McFarland, <em>Traffic Light Concept for Scorecard Summarization</em> (2026)</li>
+    <li><strong>Internal:</strong> Agrawal, <em>Scorecard Decision Framework by ExP</em> (4/27/2026) — defines the rule-based decision layer this spec scopes down to guardrails</li>
+  </ul>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SECTION 2 — Goals & Success Metrics          -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-number">Section 2</div>
+  <h2>Goals &amp; Success Metrics</h2>
+
+  <h3>Goals</h3>
+  <ol>
+    <li>Replace ad-hoc guardrail interpretation with a deterministic 🟢/🟡/🔴 ruling per guardrail and a single roll-up verdict for the scorecard</li>
+    <li>Cut data-scientist escalations for "is this guardrail OK to ship?" by ≥30% within one quarter of GA</li>
+    <li>Drive ≥95% of scorecards with at least one guardrail toward a "decided" state (green or red) — leaving only genuinely-underpowered cases as yellow</li>
+  </ol>
+
+  <h3>Success Metrics</h3>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="label">Primary Metric</div>
+      <div class="value">Guardrail Verdict Coverage</div>
+      <div class="target">Target: ≥95% of scorecards return a 🟢 or 🔴 (not 🟡) when ≥1 guardrail is configured · Baseline: ~62% deterministic today</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Secondary Metric</div>
+      <div class="value">DS Review Deflection</div>
+      <div class="target">Target: −30% DS reviews tagged "guardrail check" within 90 days post-GA · Baseline: ~410 reviews/quarter</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Guardrail Metric</div>
+      <div class="value">False-Red Rate</div>
+      <div class="target">Must not exceed: 5% of 🔴 rulings overturned on DS review · Tracked weekly via override audit log</div>
+    </div>
+  </div>
+
+  <h3>Explicit Non-Goals</h3>
+  <div class="nongoal">Primary-metric ship logic — covered by the broader ExP Scorecard Decision Framework; this spec is guardrails-only</div>
+  <div class="nongoal">SRM detection or sample-ratio mismatch handling — already a blocking pre-check upstream of this framework</div>
+  <div class="nongoal">Segment-of-interest (SOI) discovery / heterogeneous treatment effect modeling — separate workstream</div>
+  <div class="nongoal">LLM-generated scorecard narrative — this spec is the rule-based source of truth; LLM summarization consumes our verdict, not the other way around</div>
+  <div class="nongoal">Automatic threshold authoring — practical-significance thresholds are user-supplied per guardrail; this framework consumes them, not generates them</div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SECTION 3 — User Scenarios                   -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-number">Section 3</div>
+  <h2>User Scenarios</h2>
+
+  <div class="scenario-card">
+    <div class="persona">Scenario 1 — "The Sprint-Heavy PM" (Primary)</div>
+    <div class="narrative">
+      <p>Priya is a feature PM with three experiments analyzing in parallel. She opens the scorecard for her checkout-flow redesign. Her primary metric is +2.3% revenue (stat-sig), but she has two guardrails: crash rate and p95 latency. Today she'd read the CIs herself and guess. With the Guardrail Decision Framework she sees a single panel: <strong>Guardrails: 🟢 Safe to ship</strong>, with two cards beneath — crash rate (powered, not stat-sig, CI rules out her configured 0.3% harm threshold) and p95 latency (powered, +0.2% stat-sig but well under her 5% tolerance). One sentence each. She ships in under 90 seconds.</p>
+    </div>
+  </div>
+
+  <div class="scenario-card">
+    <div class="persona">Scenario 2 — "The Borderline Investigator"</div>
+    <div class="narrative">
+      <p>Marcus runs a search-ranking experiment. The framework returns <strong>🔴 Do not ship — error rate</strong>. The card shows: observed +0.4% error rate, p=0.18, CI = [−0.15%, +0.95%], threshold = 0.5%. The CI does not rule out a 0.95% spike (above his 0.5% tolerance), so even though it's not stat-sig, the framework flags it. Marcus pivots: he doesn't ship, doesn't argue with the verdict, and asks DS whether to extend the experiment or rework the change. The verdict gave him a sharp question, not a fuzzy one.</p>
+    </div>
+  </div>
+
+  <div class="scenario-card">
+    <div class="persona">Scenario 3 — "The Empty-Slate Team"</div>
+    <div class="narrative">
+      <p>A new feature team runs their first ExP scorecard. They haven't configured guardrails. The framework returns a <strong>🟡 No guardrails configured</strong> roll-up with a recommendation panel: "Add crash rate, error rate, or p95 latency before promoting this experiment." A one-click "Add platform-default guardrails" action wires up the three defaults to their experiment with sensible thresholds, and the scorecard re-evaluates. No false green, no silent ship.</p>
+    </div>
+  </div>
+
+  <div class="scenario-card">
+    <div class="persona">Scenario 4 — "The Documented Override"</div>
+    <div class="narrative">
+      <p>An eng manager hits a 🔴 ruling on a guardrail she knows is broken: a logging change in the treatment cell has temporarily inflated the "error rate" metric definition. She clicks "Override → Ship anyway." A modal requires a written justification (min 80 chars) and a category (e.g., <em>Metric measurement issue</em>, <em>Legal/compliance requirement</em>). The override is logged with her identity, timestamp, and the original verdict; her data-science partner and the experiment-owner alias are notified automatically. The red banner remains on the scorecard for audit, but ship is unblocked.</p>
+    </div>
+  </div>
+
+  <div class="scenario-card">
+    <div class="persona">Edge Case — Underpowered guardrail, no harm signal</div>
+    <div class="narrative">
+      <p>A small-cell experiment (5% traffic, 4 days) has an underpowered crash-rate guardrail: MDE = 1.2%, threshold = 0.5%. Observed +0.1%, p=0.40, CI = [−0.4%, +0.6%]. The framework returns <strong>🟡 Underpowered — extend test or ship with monitoring</strong> rather than green or red, because the CI <em>does</em> rule out severe harm (0.6% &lt; 1.0% × 2) but does not rule out the configured 0.5% threshold. The reasoning is one line; the next-action recommendation is "Extend ≥7 days to reach MDE ≤ 0.5%."</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SECTION 4 — Requirements                     -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-number">Section 4</div>
+  <h2>Requirements</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:70px">Priority</th>
+        <th style="width:50px">ID</th>
+        <th>Requirement</th>
+        <th style="width:180px">Acceptance Criteria</th>
+        <th style="width:100px">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-01</td>
+        <td>Each metric in the scorecard tagged <em>Guardrail</em> is evaluated independently and returns a verdict of 🟢 Green / 🟡 Yellow / 🔴 Red. The framework consumes ExP metric categories — guardrails are distinguished from primary, secondary, and debug metrics.</td>
+        <td>For a scorecard with N guardrails, exactly N verdicts are emitted, one per guardrail, each with a single-line reason string</td>
+        <td>Depends on ExP metric category metadata</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-02</td>
+        <td>Each guardrail must declare (a) a direction — <em>higher-is-better</em> or <em>lower-is-better</em> — and (b) a practical-significance threshold Δ (a non-negative number expressing the smallest harmful effect size the team cares about). The framework consumes these; it does not author them.</td>
+        <td>Guardrails missing direction or Δ surface a setup error and are excluded from the verdict roll-up</td>
+        <td>Authoring UX is out of scope</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-03</td>
+        <td>For each guardrail, compute the CI safety check based on direction: lower-is-better → <code>CI_upper &lt; +Δ</code>; higher-is-better → <code>CI_lower &gt; −Δ</code>. The check answers "does the CI rule out a meaningful degradation?"</td>
+        <td>CI check returns boolean pass/fail; expression matches the published formula 1:1 in QA tests across 50 fixture scorecards</td>
+        <td>Source: Agrawal 4/27, Type-A CI table</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-04</td>
+        <td>Powered + stat-sig + harmful direction → 🔴 Red ("Do not ship — [metric] harmed"). "Powered" = pre-experiment MDE at 80% power ≤ Δ. The verdict and message are deterministic; no LLM override.</td>
+        <td>Unit tests cover crash-rate +0.6% p=0.01, MDE=0.2%, Δ=0.5% → 🔴 with the exact message string</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-05</td>
+        <td>Powered + not stat-sig + CI passes → 🟢 Green ("Safe — CI rules out degradation beyond Δ"). Powered + not stat-sig + CI fails → 🔴 Red ("CI does not rule out meaningful degradation").</td>
+        <td>Unit tests cover both branches with fixture scorecards drawn from the source-doc examples</td>
+        <td>The "rules out harm" guarantee is the framework's core promise</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-06</td>
+        <td>Underpowered + not stat-sig + CI passes → 🟡 Yellow ("Underpowered, but CI rules out severe harm — extend or ship with monitoring"). Underpowered + not stat-sig + CI fails → 🔴 Red ("CI suggests possible harm").</td>
+        <td>Unit tests confirm that a CI passing Δ still yields Yellow (not Green) when MDE &gt; Δ — the under-powered case never returns Green</td>
+        <td>Source: Agrawal 4/27, Type-B CI table</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-07</td>
+        <td>Roll-up rule: scorecard-level guardrail verdict = 🔴 if any guardrail is 🔴; else 🟡 if any guardrail is 🟡; else 🟢. The roll-up is shown above the per-guardrail cards.</td>
+        <td>Mixed-verdict fixtures produce the correct roll-up; the worst single guardrail is always cited in the roll-up reason</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-08</td>
+        <td>If a scorecard has zero metrics tagged <em>Guardrail</em>, return roll-up = 🟡 with message "No guardrails configured — add crash rate, error rate, or latency before promoting." Offer a one-click action to add platform-default guardrails to the experiment.</td>
+        <td>Empty-guardrail scorecards never return Green; default-guardrails action wires up the platform defaults and triggers re-evaluation</td>
+        <td>Platform-default list maintained by ExP DS</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p1">P1</span></td>
+        <td>R-09</td>
+        <td>Pre-experiment power is computed per guardrail as MDE at 80% power using control-arm variance. "Powered" = MDE ≤ Δ; "Underpowered" = MDE &gt; Δ. The MDE value is displayed on every guardrail card.</td>
+        <td>Power calc matches the source-doc formulas to ≤1% relative error on 100 fixture scorecards</td>
+        <td>Post-hoc power is explicitly not used</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p1">P1</span></td>
+        <td>R-10</td>
+        <td>Powered + stat-sig + non-harmful direction with observed effect within Δ → 🟢 Green Neutral ("Stat-sig but within tolerance — safe to ship"). Treated as safe; the guardrail is not asked to move in the helpful direction.</td>
+        <td>Fixture: +0.1% error rate, p=0.01, Δ=0.3% → 🟢 Green Neutral with the precise reason string</td>
+        <td>Prevents false-Reds on tiny but stat-sig movements</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p1">P1</span></td>
+        <td>R-11</td>
+        <td>Borderline stat-sig zone (0.05 &lt; p ≤ 0.10) on a powered guardrail in the harmful direction → 🟡 Yellow ("Guardrail at risk — get DS review") regardless of CI check.</td>
+        <td>Verdict is Yellow (not Green) in this zone even when the CI nominally rules out Δ; reason cites the borderline p-value</td>
+        <td>Mirrors source-doc decision matrix row "Guardrail borderline"</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p1">P1</span></td>
+        <td>R-12</td>
+        <td>Override flow: from any 🔴 ruling the user can choose "Override and ship anyway." A modal requires (a) a category from a fixed list (Metric measurement issue, Legal/compliance requirement, Known false positive, Other) and (b) a written justification ≥ 80 characters.</td>
+        <td>Override is rejected without both fields; with both, ship is unblocked while the 🔴 banner remains on the scorecard for audit</td>
+        <td>Inspired by the "Ship despite Red" pattern from Expedite Experiment Detail spec</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p1">P1</span></td>
+        <td>R-13</td>
+        <td>Every override is logged with user identity, UTC timestamp, original verdict, justification, and category. Notifications fire to the experiment-owner alias and the experiment's DS contact within 60 seconds.</td>
+        <td>Audit log entries match schema; notifications observed in DS partner inbox in QA</td>
+        <td>Notifications respect user prefs</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p2">P2</span></td>
+        <td>R-14</td>
+        <td>Multi-variant experiments evaluate guardrails per treatment cell independently. One verdict per variant is shown; the scorecard roll-up is the worst across all variants.</td>
+        <td>3-arm fixture (variant A 🟢, B 🔴, C 🟡) → roll-up 🔴 citing variant B; variant cards display individually</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p2">P2</span></td>
+        <td>R-15</td>
+        <td>Segment-aware guardrails: if a guardrail is 🟢 in aggregate but 🔴 in any pre-registered critical segment, downgrade the per-guardrail verdict to 🟡 ("Aggregate safe but [segment] degraded — consider targeted rollout").</td>
+        <td>Aggregate Green + segment Red fixtures yield 🟡 (not 🟢) with the recommended-action text; segments not pre-registered are excluded</td>
+        <td>Multiple-testing correction handled upstream (BH per metric)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p2">P2</span></td>
+        <td>R-16</td>
+        <td>Each guardrail card exposes a "Why this verdict?" expandable section showing: observed effect, p-value, CI, threshold Δ, direction, MDE, and the exact decision rule that was applied (e.g., "Powered + non-stat-sig + CI passes → Green").</td>
+        <td>The exact rule string appears verbatim from a single shared dictionary across all calling surfaces (UI, API, audit log)</td>
+        <td>Makes the framework auditable end-to-end</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SECTION 5 — Design Direction (if applicable) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-number">Section 5</div>
+  <h2>Design Direction <span style="font-weight:400;font-size:0.85rem;color:var(--text-secondary)">— if applicable</span></h2>
+
+  <h3>UX Flow</h3>
+  <div class="ux-flow">
+    Scorecard Computed → Rule Engine Evaluates Each Guardrail → Roll-up Verdict + Per-Guardrail Cards Render in Scorecard "Guardrails" Tab<br>
+    User Flow: Scorecard → "Guardrails" Tab → Read Roll-up Banner → Scan Per-Metric Cards → [Why?] for Reasoning → [Ship] or [Override] (on Red)<br><br>
+    <small>Prototype: (to be linked — TBD)</small>
+  </div>
+
+  <h3>Page Layout</h3>
+  <ul>
+    <li><strong>Roll-up Banner (top):</strong> Full-width 🟢/🟡/🔴 banner with a single sentence ("Safe to ship — 3 guardrails pass" / "Do not ship — error rate harmed" / "Underpowered — extend test"). Color matches verdict; on Red, a primary "Override and ship anyway" button is right-aligned (visible but secondary in weight).</li>
+    <li><strong>Per-Guardrail Cards:</strong> One card per guardrail under the banner. Each card shows: metric name, verdict pill (color matches roll-up palette), observed effect with direction arrow, threshold Δ, MDE at 80% power, and a one-line reason. A "Why?" disclosure expands the full decision row (R-16).</li>
+    <li><strong>Empty State (no guardrails configured):</strong> Yellow banner + a prominent recommendation card: "Add platform defaults — crash rate, error rate, p95 latency — with one click." The Ship button is disabled until either guardrails are added or an override is recorded.</li>
+    <li><strong>Override Modal:</strong> Opens on "Override and ship anyway." Required: category dropdown (4 options) + justification textarea (≥80 chars). Confirm button disabled until both are valid. Modal footer notes the audit-log notification list.</li>
+  </ul>
+
+  <h3>Key Interaction Notes</h3>
+  <ul>
+    <li>Verdict pills are color-only — the icon (✓ / ! / ✕) and the word "Safe" / "At risk" / "Blocked" appear together for accessibility. Color is never the sole signal.</li>
+    <li>The roll-up banner reason cites the worst guardrail by name, e.g., "Do not ship — <em>error rate</em> CI does not rule out a 0.6% spike." Users can jump to that card with a single click.</li>
+    <li>Hovering the threshold Δ shows a tooltip with the rationale ("Smallest harmful effect this team cares about — set at experiment authoring time").</li>
+    <li>"Override and ship anyway" never removes the red banner from the scorecard. It appends an "Overridden" chip with the user's identity and timestamp; the original verdict remains visible for audit.</li>
+  </ul>
+
+  <h3>Edge Cases &amp; Empty States</h3>
+  <ul>
+    <li><strong>No guardrails configured:</strong> Yellow roll-up with the platform-defaults CTA (per R-08). Verdict is never 🟢 in this state.</li>
+    <li><strong>Guardrail with missing direction or threshold:</strong> Card shows a setup-error state and is excluded from the roll-up (per R-02); user is linked to the metric-authoring surface to fix.</li>
+    <li><strong>Borderline p-value (0.05–0.10):</strong> Yellow card with "Guardrail at risk — get DS review" reason and a built-in "Assign to DS" action (per R-11).</li>
+    <li><strong>Multi-variant scorecard:</strong> Per-variant verdict pills appear on each guardrail card; roll-up cites the worst variant (per R-14).</li>
+    <li><strong>Aggregate Green but critical segment Red:</strong> Per-guardrail card downgrades to Yellow with "Aggregate safe but [segment] degraded — consider targeted rollout" (per R-15).</li>
+    <li><strong>Underpowered Yellow:</strong> Card shows MDE > Δ and recommends concrete next action ("Extend ≥7 days to reach MDE ≤ Δ").</li>
+  </ul>
+
+  <h3>Accessibility</h3>
+  <ul>
+    <li>Verdict pills meet AA contrast for the corresponding palette pair; the verdict word and icon are read aloud by screen readers ("Guardrail error rate, verdict Blocked, do not ship").</li>
+    <li>The roll-up banner is the first focusable region on the Guardrails tab; tabbing reaches each guardrail card in document order.</li>
+    <li>The override modal is fully keyboard-operable; Esc cancels, Enter confirms only when both fields are valid. Form errors are announced via aria-live.</li>
+  </ul>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SECTION 6 — Open Questions & Risks           -->
+<!-- ════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-number">Section 6</div>
+  <h2>Open Questions &amp; Risks</h2>
+
+  <h3>Open Questions</h3>
+  <div class="question-card">
+    <div class="q-title">Q1: What's the canonical list of "platform default" guardrails for teams with none configured?</div>
+    <p>R-08 calls for a one-click "Add platform defaults" action. We need ExP DS to publish the canonical default list (likely crash rate, error rate, p95 latency) with default Δ values that work for the majority of feature areas, and a process for area-specific overrides. <strong>Owner:</strong> Ankita Agrawal (ExP DS). <strong>ETA for decision:</strong> June 2026.</p>
+  </div>
+  <div class="question-card">
+    <div class="q-title">Q2: Where do practical-significance thresholds Δ get authored, and by whom?</div>
+    <p>This spec consumes Δ but does not author it. We need to settle whether Δ is a per-metric platform default (set once by ExP DS), a per-experiment override (set by the PM at experiment-design time), or both. Strong leaning: both, with per-metric default + per-experiment optional override. <strong>Owner:</strong> Dylan Daly (PM) + Ankita Agrawal (DS).</p>
+  </div>
+  <div class="question-card">
+    <div class="q-title">Q3: Should overrides require a second approver (two-person rule) for high-traffic experiments?</div>
+    <p>R-12 / R-13 require justification + audit but not a co-signer. For experiments above a certain user count or revenue exposure, a two-person rule may be safer. <strong>Risk of adding it:</strong> friction, especially for clear-cut measurement-error overrides. <strong>Current leaning:</strong> Ship V1 with single-user override + audit; add two-person rule in V2 if overrides are abused.</p>
+  </div>
+  <div class="question-card">
+    <div class="q-title">Q4: How are multiple-testing corrections (BH per metric across segments) communicated to the user?</div>
+    <p>R-15 references BH-corrected segment guardrails handled "upstream." We need to confirm the segment-of-interest pipeline already applies BH per guardrail before this framework reads results, and decide whether the framework UI mentions BH to users or hides it. <strong>Owner:</strong> Harrison Wang (ExP DS).</p>
+  </div>
+
+  <h3>Risks</h3>
+  <div class="risk-card">
+    <div class="risk-title">Risk 1: False Reds Drive Override Fatigue</div>
+    <p><strong>Likelihood:</strong> Medium · <strong>Impact:</strong> High. If the framework returns 🔴 too aggressively — particularly on widely-deployed metrics with noisy small movements — teams will reflexively override and the audit log becomes meaningless. <strong>Mitigation:</strong> (1) R-10 "stat-sig within tolerance → Green Neutral" prevents the common false-Red on tiny movements; (2) track the False-Red Rate guardrail metric (target ≤5%); (3) review overrides weekly with ExP DS for the first two quarters and tune thresholds where patterns emerge.</p>
+  </div>
+  <div class="risk-card">
+    <div class="risk-title">Risk 2: Underpowered Guardrails Silently Permit Harm</div>
+    <p><strong>Likelihood:</strong> High · <strong>Impact:</strong> High. If a small-cell experiment has wide CIs on a guardrail, today's ad-hoc readings often call it "fine." The framework's R-06 explicitly returns Yellow (not Green) for the underpowered + non-stat-sig + CI-passes case, but Yellow is easy to dismiss. <strong>Mitigation:</strong> (1) Roll-up Yellow blocks one-click ship in the UI (forces explicit acknowledgment); (2) recommend concrete extend-the-test next action with the MDE math shown; (3) instrument adoption of the "extend" action vs Yellow ships.</p>
+  </div>
+  <div class="risk-card">
+    <div class="risk-title">Risk 3: Divergence From the Broader ExP Decision Framework</div>
+    <p><strong>Likelihood:</strong> Medium · <strong>Impact:</strong> Medium. The source doc (Agrawal 4/27) is the broader rule-based decision layer covering SRM, primaries, segments, and LLM prompting. If this spec drifts from its decision rules, ExP ends up with two non-aligned sources of truth. <strong>Mitigation:</strong> (1) Every rule cited in Section 4 carries an explicit reference to the source-doc section it implements; (2) ExP DS owns a shared rule dictionary (R-16) used by both this framework and the parent decision layer; (3) cross-review with Ankita Agrawal before R-XX changes ship.</p>
+  </div>
+</div>
+
+</div><!-- end .content -->
+
+<div class="footer">
+  Guardrail Decision Framework — Product Specification · ExP · Experimentation Platform · Last updated May 11, 2026
+</div>
+
+</body>
+</html>
