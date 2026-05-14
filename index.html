@@ -328,10 +328,20 @@
   <h2>Problem &amp; Opportunity</h2>
 
   <h3>Problem Statement</h3>
-  <p>Feature teams running experiments on ExP get rich scorecards but no consistent answer to the question that actually blocks ship: <em>"Will this regress a guardrail metric?"</em> Today, each team reads p-values and confidence intervals against their own ad-hoc rules of thumb. A non-significant +0.4% crash-rate movement is shipped by one team and blocked by another. Underpowered guardrails are treated as "passing" when in reality they're <strong>uninformative</strong>. The result is preventable user-facing regressions, inconsistent ship bars across the division, and data-scientist toil reviewing every borderline scorecard.</p>
+  <p>Feature teams running experiments in Expedite receive rich scorecards, but the product still falls short on the core question that blocks action: <em>can a team make a timely, confident guardrail decision?</em> Today, the experience creates uncertainty, delays, and unnecessary cost. Three problems stand out and should be addressed directly.</p>
+
+  <h4 style="font-size:1rem;font-weight:600;margin:18px 0 6px;color:var(--text);">1. Expedite shows "no decision" for the vast majority of experiments today.</h4>
+  <p>The current experience surfaces a no-decision outcome in approximately <strong>99% of cases</strong>, which makes the product far less useful to experimenters and decision-makers who need clear guidance. Instead of accelerating decisions, Expedite often leaves teams to interpret ambiguous results on their own. A successful solution should reverse this pattern by producing deterministic decisions for the overwhelming majority of scorecards and making the next step explicit when a final decision is not yet possible.</p>
+
+  <h4 style="font-size:1rem;font-weight:600;margin:18px 0 6px;color:var(--text);">2. Expedite depends on 7-day scorecards before it can provide a decision.</h4>
+  <p>This dependency slows experiment velocity and reduces the practical value of the product. In many cases, leaders and feature teams will move forward before day 7, with or without Expedite's input. If the platform is intended to influence real ship decisions, it must deliver guardrail guidance early enough to be part of the decision window rather than arriving after the decision has effectively already been made.</p>
+
+  <h4 style="font-size:1rem;font-weight:600;margin:18px 0 6px;color:var(--text);">3. 7-day scorecards are more than twice as expensive as 3-day scorecards.</h4>
+  <p>Beyond slowing decisions, the current dependency on 7-day scorecards also creates a significant cost problem. If a 7-day scorecard costs <strong>more than 2× a 3-day scorecard</strong>, then continuing to anchor decision-making on the longer window materially increases COGS at scale. Cost efficiency must be treated as a first-class product consideration. Moving decisions earlier would both improve responsiveness and create immediate savings, with future opportunities to reinvest those savings into better sensitivity and overall scorecard quality.</p>
 
   <h3>Opportunity</h3>
-  <p>IDEAS Exp has the opportunity to evaluate ~3,000+ experiments per month. An ExP study of 240 randomly sampled "shipped" experiments from Q1 2026 found that <strong>11% of experiments shipped on signals that were statistically uninformative on harm</strong>. A deterministic, auditable Guardrail Decision Framework — built from rule-based logic — turns guardrails from a "vibes check" into a contract: each guardrail metric returns a decision with an action and a reason, and the scorecards roll up to a single guardrail verdict.</p>
+  <p>IDEAS Exp has the opportunity to turn guardrail decisioning into a scaled platform capability across <strong>more than 3,000 experiments per month</strong>. At that volume, the current state is not just a UX issue — it is a systemic efficiency and cost problem. If Expedite continues to return "no decision" for roughly 99% of experiments, depends on 7-day scorecards before guidance is available, and requires a scorecard format that costs more than 2× as much as a 3-day alternative, then the platform will add friction and COGS at exactly the point where it should be creating leverage.</p>
+  <p>The opportunity is to make Expedite operationally decisive at scale: deliver earlier guardrail verdicts, dramatically reduce no-decision outcomes, and shift more evaluations onto lower-cost 3-day scorecards wherever they can support confident decisions. Doing so would allow IDEAS Exp to influence real ship decisions across thousands of monthly experiments while improving platform responsiveness and materially reducing the cost of evaluation.</p>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
@@ -343,8 +353,9 @@
 
   <h3>Goals</h3>
   <ol>
-    <li>Drive ≥95% of scorecards with at least one guardrail metric toward a "decided" state of <strong>safe</strong> or <strong>not-safe</strong> — leaving only genuinely-underpowered cases as <strong>wait</strong>.</li>
-    <li>Reduce harmful ship decisions based on underpowered data.</li>
+    <li>Drive ≥95% of scorecards with at least one guardrail metric toward a "decided" state of <strong>safe</strong> or <strong>not-safe</strong> — leaving only genuinely-underpowered cases as <strong>Extend</strong>.</li>
+    <li>Deliver guardrail guidance within 7 days of experiment step start for &gt;99% of experiments we have scorecards for.</li>
+    <li>Reduce auto-scheduled 7-day scorecard volume by &gt;70%.</li>
     <li>Have the same guardrails and decision criteria for the entire division.</li>
     <li>Replace naïve guardrail interpretation with a deterministic ruling per guardrail and a single roll-up verdict for the rollout / experiment.</li>
   </ol>
@@ -355,16 +366,29 @@
       <div class="label">Primary Metric</div>
       <div class="value">Guardrail Verdict Coverage</div>
       <div class="target">≥95% of scorecard evaluations return a <em>safe</em> or <em>not-safe</em> decision when at least one guardrail is configured.</div>
+      <div class="target" style="margin-top:6px;"><strong>Baseline:</strong> 1%</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Secondary Metric</div>
+      <div class="value">Decision Velocity</div>
+      <div class="target">&gt;99% of experiments have a decision in &lt;7 days.</div>
+      <div class="target" style="margin-top:6px;"><strong>Baseline:</strong> 0%</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Tertiary Metric</div>
+      <div class="value">Scorecard Volume</div>
+      <div class="target">Reduce auto-scheduled 7-day scorecard volume by &gt;70%.</div>
+      <div class="target" style="margin-top:6px;"><strong>Baseline:</strong> TBD</div>
     </div>
   </div>
 
   <h3>Explicit Non-Goals</h3>
-  <div class="nongoal">Product ship-decision logic — covered by the partner product teams; this spec is division guardrails-only</div>
-  <div class="nongoal">SRM detection or sample-ratio mismatch handling — already a blocking pre-check upstream of this framework</div>
-  <div class="nongoal">Segment or slice-based guardrails — aggregate rules all; slices cannot outweigh an aggregate decision</div>
-  <div class="nongoal">GPT scorecard narrative — this spec is the rule-based source of truth; GPT summarization consumes this decision, not the other way around</div>
-  <div class="nongoal">Automatic threshold authoring — practical-significance thresholds (the smallest meaningful change) are defined per guardrail; this framework consumes those definitions, it does not generate them</div>
-  <div class="nongoal">Any UX for this feature — all decisions will be presented in the detail page</div>
+  <div class="nongoal">Product ship-decision logic — covered by the partner product teams; this spec is division guardrails-only.</div>
+  <div class="nongoal">SRM detection or sample-ratio mismatch handling — already a blocking pre-check upstream of this framework.</div>
+  <div class="nongoal">Segment or slice-based guardrails — aggregate rules all; slices cannot outweigh an aggregate decision.</div>
+  <div class="nongoal">GPT scorecard narrative — this spec is the rule-based source of truth; GPT summarization consumes this decision, not the other way around.</div>
+  <div class="nongoal">Automatic threshold authoring — practical-significance thresholds (the smallest meaningful change) are defined per guardrail; this framework consumes those definitions, it does not generate them.</div>
+  <div class="nongoal">Any UX for this feature — all decisions will be presented in the detail page.</div>
 </div>
 
 <!-- ════════════════════════════════════════════ -->
