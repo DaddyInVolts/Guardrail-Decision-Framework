@@ -458,7 +458,21 @@
         <td>R-01</td>
         <td>Expedite Admins identify guardrail metrics and their meaningful thresholds. Each guardrail must declare (a) a direction — <em>higher-is-better</em> or <em>lower-is-better</em> — and (b) a practical-significance threshold Δ (a non-negative number expressing the smallest harmful effect size the team cares about). The framework consumes these; it does not author them.</td>
         <td>A variety of guardrails representing Performance and Growth variables across Consumer and Commercial dimensions are labeled in an editable .md file. Guardrails missing direction or Δ surface a setup error and are excluded from the verdict roll-up.</td>
-        <td>Stakeholders should sign off on the guardrails chosen.</td>
+        <td>Stakeholders should sign off on the guardrails chosen. The full set of admin-time fields is formalized in R-12.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-12</td>
+        <td><strong>Guardrail definition contract.</strong> A guardrail is fully defined by six admin-time fields: <code>metric_id</code>, <code>direction</code> (higher-is-better / lower-is-better), practical-significance threshold <strong>Δ</strong> (non-negative number), <strong>audience scope</strong> (Consumer / Commercial / Both), <strong>category</strong> (Performance / Growth), and <strong>owner</strong> (accountable PM or alias). All six are authored before any experiment runs; none are observed from scorecard execution.</td>
+        <td>Registry rows missing any of the six fields fail validation at load time, surface a setup error citing the missing field, and are excluded from the verdict roll-up — they do not silently default. Validation is covered by unit tests for each missing-field case.</td>
+        <td>Promotes audience / category / owner from implicit (carried in personas) to required. Extends and operationalizes R-01.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-p0">P0</span></td>
+        <td>R-13</td>
+        <td><strong>Scorecard output contract.</strong> For the framework to rule on a guardrail row, the scorecard pipeline must emit six per-guardrail, per-run fields: <code>observed_delta</code> (point estimate), <code>CI_lower</code>, <code>CI_upper</code>, <code>p_value</code>, <code>MDE_at_80pct_power</code>, and <code>variant_cell</code> (T/C identifier; defaults to a single value in two-arm experiments). These are produced by scorecard execution — they are not authored by the admin and are not part of R-12.</td>
+        <td>A scorecard row missing any of the six fields surfaces a setup error pointing to the missing field and is excluded from the verdict roll-up rather than silently passing. End-to-end QA fixtures cover the missing-field error for each of the six.</td>
+        <td>The <em>Powered</em> flag (MDE ≤ Δ), per-guardrail verdict, single-line reason, and roll-up are derived by the framework from R-12 + R-13 inputs and are not part of either contract.</td>
       </tr>
       <tr>
         <td><span class="badge badge-p0">P0</span></td>
@@ -582,7 +596,7 @@
 </div><!-- end .content -->
 
 <div class="footer">
-  Guardrail Decision Framework — Product Specification · ExP · Experimentation Platform · Last updated May 14, 2026
+  Guardrail Decision Framework — Product Specification · ExP · Experimentation Platform · Last updated May 21, 2026 (R-12, R-13 added)
 </div>
 
 </body>
